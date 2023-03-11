@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+
+CYAN=$'\e[0;36m'
+GREEN=$'\e[0;32m'
+NC=$'\e[0m'
+RED=$'\e[0;31m'
+YELLOW=$'\e[0;33m'
+
+function wait_cmd {
+  local cmd name
+
+  name=$1
+  shift
+
+  cmd=$1
+  shift
+
+  count=0
+  while ! $cmd 2>&1 >/dev/null; do
+    if [[ $count -eq 10 ]]; then
+      echo "[${RED}ERROR${NC}] $name did not start after 10 seconds"
+      exit 1
+    fi
+
+    echo "${CYAN}Waiting for $name to start...${NC}"
+    sleep 1
+    ((count++))
+  done
+}
