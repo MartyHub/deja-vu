@@ -39,7 +39,7 @@ func (c *Config) Build() DejaVu {
 		cfg.logger = LogLogger{}
 	}
 
-	c.logger.Log(cfg.String())
+	cfg.logger.Log(cfg.String())
 
 	return DejaVu{Config: cfg}
 }

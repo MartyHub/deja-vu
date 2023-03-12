@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var now = time.UnixMilli(1678485867000) //nolint:gochecknoglobals
+var now = time.UnixMilli(1678485867000).UTC() //nolint:gochecknoglobals
 
 type fixedClock struct {
 	now time.Time
