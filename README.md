@@ -2,6 +2,8 @@
 
 `Deja-Vu` is a *simple* database versioning library written in Go.  
 
+![build](https://github.com/MartyHub/deja-vu/actions/workflows/go.yml/badge.svg)
+
 ## Compatibility
 
 Tested with:
