@@ -2,13 +2,37 @@ name: Go
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: deja_vu
+          MYSQL_ROOT_PASSWORD: root
+        options: >-
+          --health-cmd "mysql --execute \\s --password=root deja_vu"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 3306:3306
+      postgresql:
+        image: postgres:15.2
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
 
@@ -24,4 +48,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
 
       - name: Test
-        run: go test -short -race -timeout 30s ./...
+        run: go test -race -timeout 30s ./...

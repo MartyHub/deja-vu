@@ -11,6 +11,10 @@ if [[ -z "$podman_id" ]]; then
   if ! podman run \
     --detach \
     --env POSTGRES_PASSWORD=postgres \
+    --health-cmd pg_isready \
+    --health-interval 1s \
+    --health-timeout 5s \
+    --health-retries 5 \
     --name postgresql \
     --publish 5432:5432 \
     --rm \

@@ -24,6 +24,6 @@ if [[ -z "$podman_id" ]]; then
   fi
 fi
 
-wait_cmd MySQL "${script_dir}/mysql_connect.sh --execute \s --silent"
+wait_cmd MySQL "${script_dir}/mysql_connect.sh --execute \s"
 
 echo "[${GREEN}OK${NC}] MySQL is running"
