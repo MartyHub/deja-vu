@@ -27,33 +27,33 @@ func TestStatement_Arg(t *testing.T) {
 
 func TestStatement_WithSyntax_NoArg(t *testing.T) {
 	tests := []struct {
-		name              string
-		placeholderSyntax PlaceholderSyntax
-		want              string
-		want1             []any
+		name         string
+		placeholders Placeholders
+		want         string
+		want1        []any
 	}{
 		{
-			name:              "index",
-			placeholderSyntax: PlaceholderIndexed,
-			want:              "select * from test_table",
-			want1:             []any{},
+			name:         "index",
+			placeholders: PlaceholdersIndexed(":"),
+			want:         "select * from test_table",
+			want1:        []any{},
 		},
 		{
-			name:              "name",
-			placeholderSyntax: PlaceholderNamed,
-			want:              "select * from test_table",
-			want1:             []any{},
+			name:         "name",
+			placeholders: PlaceholdersNamed(":"),
+			want:         "select * from test_table",
+			want1:        []any{},
 		},
 		{
-			name:              "question mark",
-			placeholderSyntax: PlaceholderQuestionMark,
-			want:              "select * from test_table",
-			want1:             []any{},
+			name:         "question mark",
+			placeholders: PlaceholdersQuestionMark(),
+			want:         "select * from test_table",
+			want1:        []any{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := NewStatement("select * from test_table").WithSyntax(tt.placeholderSyntax)
+			got, got1 := NewStatement("select * from test_table").WithPlaceholders(tt.placeholders)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.want1, got1)
 		})
@@ -62,31 +62,31 @@ func TestStatement_WithSyntax_NoArg(t *testing.T) {
 
 func TestStatement_WithSyntax(t *testing.T) {
 	tests := []struct {
-		name              string
-		placeholderSyntax PlaceholderSyntax
-		want              string
-		want1             []any
+		name         string
+		placeholders Placeholders
+		want         string
+		want1        []any
 	}{
 		{
-			name:              "index",
-			placeholderSyntax: PlaceholderIndexed,
-			want:              "select * from test_table where field1 = $1 and field2 = $2 and field3 = $1",
-			want1:             []any{"value1", "value2"},
+			name:         "index",
+			placeholders: PlaceholdersIndexed("$"),
+			want:         "select * from test_table where field1 = $1 and field2 = $2 and field3 = $1",
+			want1:        []any{"value1", "value2"},
 		},
 		{
-			name:              "name",
-			placeholderSyntax: PlaceholderNamed,
-			want:              "select * from test_table where field1 = :arg1 and field2 = :arg2 and field3 = :arg1",
+			name:         "name",
+			placeholders: PlaceholdersNamed(":"),
+			want:         "select * from test_table where field1 = :arg1 and field2 = :arg2 and field3 = :arg1",
 			want1: []any{
 				sql.Named("arg1", "value1"),
 				sql.Named("arg2", "value2"),
 			},
 		},
 		{
-			name:              "question mark",
-			placeholderSyntax: PlaceholderQuestionMark,
-			want:              "select * from test_table where field1 = ? and field2 = ? and field3 = ?",
-			want1:             []any{"value1", "value2", "value1"},
+			name:         "question mark",
+			placeholders: PlaceholdersQuestionMark(),
+			want:         "select * from test_table where field1 = ? and field2 = ? and field3 = ?",
+			want1:        []any{"value1", "value2", "value1"},
 		},
 	}
 	for _, tt := range tests {
@@ -94,7 +94,7 @@ func TestStatement_WithSyntax(t *testing.T) {
 			got, got1 := NewStatement("select * from test_table where field1 = :arg1 and field2 = :arg2 and field3 = :arg1").
 				Arg("arg1", "value1").
 				Arg("arg2", "value2").
-				WithSyntax(tt.placeholderSyntax)
+				WithPlaceholders(tt.placeholders)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.want1, got1)
 		})

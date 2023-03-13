@@ -3,11 +3,11 @@ package dejavu
 import "fmt"
 
 const (
-	HistoryTableName      = "deja_vu_history"
-	HistoryColumnName     = "name"
-	HistoryColumnStart    = "start"
-	HistoryColumnDuration = "duration_ms"
-	HistoryColumnChecksum = "checksum"
+	HistoryTableName       = "deja_vu_history"
+	HistoryColumnName      = "name"
+	HistoryColumnStartedAt = "started_at"
+	HistoryColumnDuration  = "duration_ms"
+	HistoryColumnChecksum  = "checksum"
 )
 
 const (
@@ -50,7 +50,7 @@ func (s DefaultStatements) CreateHistoryTable() *Statement {
 		)`,
 		HistoryTableName,
 		HistoryColumnName,
-		HistoryColumnStart,
+		HistoryColumnStartedAt,
 		HistoryColumnDuration,
 		HistoryColumnChecksum,
 	)
@@ -101,7 +101,7 @@ func (s DefaultStatements) History() *Statement {
 	return NewStatement(
 		"select %s, %s, %s, %s from %s order by %s",
 		HistoryColumnName,
-		HistoryColumnStart,
+		HistoryColumnStartedAt,
 		HistoryColumnDuration,
 		HistoryColumnChecksum,
 		HistoryTableName,
@@ -114,7 +114,7 @@ func (s DefaultStatements) Log(mig Migration) *Statement {
 		"insert into %s (%s, %s, %s, %s) values (:name, :start, :duration_ms, :checksum)",
 		HistoryTableName,
 		HistoryColumnName,
-		HistoryColumnStart,
+		HistoryColumnStartedAt,
 		HistoryColumnDuration,
 		HistoryColumnChecksum,
 	).

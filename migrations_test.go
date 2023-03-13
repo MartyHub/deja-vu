@@ -54,7 +54,7 @@ func Test_fsMigrations_Content(t *testing.T) {
 			name:    "ok",
 			args:    args{name: "2023-01-01/01_create_country_table.sql"},
 			wantErr: assert.NoError,
-			want:    "create table country\n(\n    name                     varchar(64) not null,\n    alpha2                   char(2)     not null,\n    alpha3                   char(3)     not null,\n    country_code             char(3)     not null,\n    iso_3166_2               char(13)    not null,\n    region                   varchar(8),\n    sub_region               varchar(32),\n    intermediate_region      varchar(16),\n    region_code              char(3),\n    sub_region_code          char(3),\n    intermediate_region_code char(3),\n    primary key (name)\n);\n", //nolint:lll
+			want:    "create table country\n(\n    name                     varchar(64) not null,\n    alpha2                   char(2)     not null,\n    alpha3                   char(3)     not null,\n    country_code             char(3)     not null,\n    iso_3166_2               char(13)    not null,\n    region                   varchar(8),\n    sub_region               varchar(32),\n    intermediate_region      varchar(16),\n    region_code              varchar(3),\n    sub_region_code          varchar(3),\n    intermediate_region_code varchar(3),\n    constraint country_pk primary key (name)\n);\n", //nolint:lll
 		},
 	}
 

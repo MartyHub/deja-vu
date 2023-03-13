@@ -12,7 +12,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func mysql(t *testing.T) (*sql.DB, PlaceholderSyntax) {
+func mysql(t *testing.T) (*sql.DB, Placeholders) {
 	t.Helper()
 
 	result, err := sql.Open(
@@ -25,10 +25,10 @@ func mysql(t *testing.T) (*sql.DB, PlaceholderSyntax) {
 		_ = result.Close()
 	})
 
-	return result, PlaceholderQuestionMark
+	return result, PlaceholdersQuestionMark()
 }
 
-func postgresql(t *testing.T) (*sql.DB, PlaceholderSyntax) {
+func postgresql(t *testing.T) (*sql.DB, Placeholders) {
 	t.Helper()
 
 	result, err := sql.Open("pgx", "postgresql://postgres:postgres@localhost:5432/postgres")
@@ -38,10 +38,10 @@ func postgresql(t *testing.T) (*sql.DB, PlaceholderSyntax) {
 		_ = result.Close()
 	})
 
-	return result, PlaceholderIndexed
+	return result, PlaceholdersIndexed("$")
 }
 
-func sqlite(t *testing.T) (*sql.DB, PlaceholderSyntax) {
+func sqlite(t *testing.T) (*sql.DB, Placeholders) {
 	t.Helper()
 
 	result, err := sql.Open("sqlite", ":memory:")
@@ -51,13 +51,13 @@ func sqlite(t *testing.T) (*sql.DB, PlaceholderSyntax) {
 		_ = result.Close()
 	})
 
-	return result, PlaceholderQuestionMark
+	return result, PlaceholdersQuestionMark()
 }
 
 func TestDejaVu_Upgrade(t *testing.T) {
 	type test struct {
 		name  string
-		setup func(t *testing.T) (*sql.DB, PlaceholderSyntax)
+		setup func(t *testing.T) (*sql.DB, Placeholders)
 	}
 
 	tests := []test{

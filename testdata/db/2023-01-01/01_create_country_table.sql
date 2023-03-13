@@ -8,8 +8,8 @@ create table country
     region                   varchar(8),
     sub_region               varchar(32),
     intermediate_region      varchar(16),
-    region_code              char(3),
-    sub_region_code          char(3),
-    intermediate_region_code char(3),
-    primary key (name)
+    region_code              varchar(3),
+    sub_region_code          varchar(3),
+    intermediate_region_code varchar(3),
+    constraint country_pk primary key (name)
 );

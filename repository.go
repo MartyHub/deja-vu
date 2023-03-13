@@ -21,18 +21,18 @@ type Repository interface {
 	QueryRow(ctx context.Context, stmt *Statement) *sql.Row
 }
 
-func NewRepository(db *sql.DB, logger Logger, syntax PlaceholderSyntax) DBRepository {
+func NewRepository(db *sql.DB, logger Logger, placeholders Placeholders) DBRepository {
 	return DBRepository{
-		db:     db,
-		logger: logger,
-		syntax: syntax,
+		db:           db,
+		logger:       logger,
+		placeholders: placeholders,
 	}
 }
 
 type DBRepository struct {
-	db     *sql.DB
-	logger Logger
-	syntax PlaceholderSyntax
+	db           *sql.DB
+	logger       Logger
+	placeholders Placeholders
 }
 
 //nolint:nakedret
@@ -78,7 +78,7 @@ func (repo DBRepository) Ping(ctx context.Context) error {
 }
 
 func (repo DBRepository) Exec(ctx context.Context, stmt *Statement) error {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 	_, err := repo.db.ExecContext(ctx, query, args...)
 
@@ -86,21 +86,21 @@ func (repo DBRepository) Exec(ctx context.Context, stmt *Statement) error {
 }
 
 func (repo DBRepository) Query(ctx context.Context, stmt *Statement) (*sql.Rows, error) {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 
 	return repo.db.QueryContext(ctx, query, args...)
 }
 
 func (repo DBRepository) QueryRow(ctx context.Context, stmt *Statement) *sql.Row {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 
 	return repo.db.QueryRowContext(ctx, query, args...)
 }
 
 func (repo DBRepository) String() string {
-	return fmt.Sprintf("SQL db with %v args", repo.syntax)
+	return fmt.Sprintf("SQL db with %v", repo.placeholders)
 }
 
 type txRepository struct {
@@ -129,7 +129,7 @@ func (repo txRepository) Ping(ctx context.Context) error {
 }
 
 func (repo txRepository) Exec(ctx context.Context, stmt *Statement) error {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 	_, err := repo.tx.ExecContext(ctx, query, args...)
 
@@ -137,21 +137,21 @@ func (repo txRepository) Exec(ctx context.Context, stmt *Statement) error {
 }
 
 func (repo txRepository) Query(ctx context.Context, stmt *Statement) (*sql.Rows, error) {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 
 	return repo.tx.QueryContext(ctx, query, args...)
 }
 
 func (repo txRepository) QueryRow(ctx context.Context, stmt *Statement) *sql.Row {
-	query, args := stmt.WithSyntax(repo.syntax)
+	query, args := stmt.WithPlaceholders(repo.placeholders)
 	logStatement(repo.logger, query, args)
 
 	return repo.tx.QueryRowContext(ctx, query, args...)
 }
 
 func (repo txRepository) String() string {
-	return fmt.Sprintf("SQL tx with %v args", repo.syntax)
+	return fmt.Sprintf("SQL tx with %v args", repo.placeholders)
 }
 
 func logStatement(logger Logger, query string, args []any) {

@@ -16,6 +16,52 @@ const (
 	PlaceholderQuestionMark = "Question Mark"
 )
 
+type Placeholders struct {
+	Prefix string
+	Syntax PlaceholderSyntax
+}
+
+func (p Placeholders) String() string {
+	return fmt.Sprintf("%s args with %s", p.Syntax, p.Prefix)
+}
+
+func PlaceholdersMySQL() Placeholders {
+	return PlaceholdersQuestionMark()
+}
+
+func PlaceholdersOracle() Placeholders {
+	return PlaceholdersIndexed(":")
+}
+
+func PlaceholdersPostgreSQL() Placeholders {
+	return PlaceholdersIndexed("$")
+}
+
+func PlaceholdersSQLite() Placeholders {
+	return PlaceholdersQuestionMark()
+}
+
+func PlaceholdersIndexed(prefix string) Placeholders {
+	return Placeholders{
+		Prefix: prefix,
+		Syntax: PlaceholderIndexed,
+	}
+}
+
+func PlaceholdersNamed(prefix string) Placeholders {
+	return Placeholders{
+		Prefix: prefix,
+		Syntax: PlaceholderNamed,
+	}
+}
+
+func PlaceholdersQuestionMark() Placeholders {
+	return Placeholders{
+		Prefix: "?",
+		Syntax: PlaceholderQuestionMark,
+	}
+}
+
 type Statement struct {
 	sql  string
 	args []sql.NamedArg
@@ -31,25 +77,25 @@ func (s *Statement) Arg(name string, value any) *Statement {
 	return s
 }
 
-func (s *Statement) WithSyntax(syntax PlaceholderSyntax) (string, []any) {
-	switch syntax {
+func (s *Statement) WithPlaceholders(placeholders Placeholders) (string, []any) {
+	switch placeholders.Syntax {
 	case PlaceholderIndexed:
-		return s.WithIndexedArgs()
+		return s.WithIndexedArgs(placeholders.Prefix)
 	case PlaceholderNamed:
 		return s.WithNamedArgs()
 	case PlaceholderQuestionMark:
 		return s.WithQuestionMarkArgs()
 	}
 
-	panic("don't know how to handle " + syntax)
+	panic("don't know how to handle " + placeholders.Syntax)
 }
 
-func (s *Statement) WithIndexedArgs() (string, []any) {
+func (s *Statement) WithIndexedArgs(prefix string) (string, []any) {
 	args := make([]any, len(s.args))
 	stmt := s.sql
 
 	for i, arg := range s.args {
-		stmt = strings.ReplaceAll(stmt, ":"+arg.Name, "$"+strconv.Itoa(i+1))
+		stmt = strings.ReplaceAll(stmt, ":"+arg.Name, prefix+strconv.Itoa(i+1))
 		args[i] = arg.Value
 	}
 
