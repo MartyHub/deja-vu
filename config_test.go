@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestConfig(t *testing.T, db *sql.DB, placeholders Placeholders) *Config {
+func newTestConfig(t *testing.T, db *sql.DB, name string, placeholders Placeholders) *Config {
 	t.Helper()
 
 	clock := newTestClock()
 	logger := newTestLogger(t)
 
 	return NewConfig(
-		NewDatabase(clock, logger, NewRepository(db, logger, placeholders), DefaultStatements{}),
+		NewDatabase(clock, logger, name, NewRepository(db, logger, placeholders), DefaultStatements{}),
 		newTestMigrations(t),
 	).
 		WithClock(clock).
@@ -25,7 +25,13 @@ func newTestConfig(t *testing.T, db *sql.DB, placeholders Placeholders) *Config 
 
 func TestNewConfig(t *testing.T) {
 	logger := newTestLogger(t)
-	db := NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{})
+	db := NewDatabase(
+		newTestClock(),
+		logger,
+		"",
+		NewRepository(nil, logger, PlaceholdersQuestionMark()),
+		DefaultStatements{},
+	)
 	migs := newTestMigrations(t)
 	cfg := NewConfig(db, migs)
 
@@ -40,7 +46,12 @@ func TestNewConfig(t *testing.T) {
 
 func TestConfig_Build(t *testing.T) {
 	logger := newTestLogger(t)
-	db := NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{})
+	db := NewDatabase(
+		newTestClock(), logger,
+		"",
+		NewRepository(nil, logger, PlaceholdersQuestionMark()),
+		DefaultStatements{},
+	)
 	migs := newTestMigrations(t)
 	dv := NewConfig(db, migs).Build()
 
@@ -59,7 +70,13 @@ func TestConfig_WithClock(t *testing.T) {
 	logger := newTestLogger(t)
 	testClock := newTestClock()
 	cfg := NewConfig(
-		NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{}),
+		NewDatabase(
+			newTestClock(),
+			logger,
+			"",
+			NewRepository(nil, logger, PlaceholdersQuestionMark()),
+			DefaultStatements{},
+		),
 		newTestMigrations(t),
 	).WithClock(testClock)
 
@@ -69,7 +86,13 @@ func TestConfig_WithClock(t *testing.T) {
 func TestConfig_WithLogger(t *testing.T) {
 	logger := newTestLogger(t)
 	cfg := NewConfig(
-		NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{}),
+		NewDatabase(
+			newTestClock(),
+			logger,
+			"",
+			NewRepository(nil, logger, PlaceholdersQuestionMark()),
+			DefaultStatements{},
+		),
 		newTestMigrations(t),
 	).WithLogger(logger)
 
@@ -80,7 +103,13 @@ func TestConfig_WithTick(t *testing.T) {
 	logger := newTestLogger(t)
 	tick := 42 * time.Minute
 	cfg := NewConfig(
-		NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{}),
+		NewDatabase(
+			newTestClock(),
+			logger,
+			"",
+			NewRepository(nil, logger, PlaceholdersQuestionMark()),
+			DefaultStatements{},
+		),
 		newTestMigrations(t),
 	).WithTick(tick)
 
@@ -91,7 +120,13 @@ func TestConfig_WithTimeout(t *testing.T) {
 	logger := newTestLogger(t)
 	timeout := 42 * time.Minute
 	cfg := NewConfig(
-		NewDatabase(newTestClock(), logger, NewRepository(nil, logger, PlaceholdersQuestionMark()), DefaultStatements{}),
+		NewDatabase(
+			newTestClock(),
+			logger,
+			"",
+			NewRepository(nil, logger, PlaceholdersQuestionMark()),
+			DefaultStatements{},
+		),
 		newTestMigrations(t),
 	).WithTimeout(timeout)
 
@@ -101,7 +136,7 @@ func TestConfig_WithTimeout(t *testing.T) {
 func TestConfig_String(t *testing.T) {
 	assert.Equal(
 		t,
-		"Config: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, db=Database: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, logger=test logger, repo=SQL db with Question Mark args with ?, stmts=Default SQL statements, migs=&{testdata db}, tick=5s, timeout=5m0s", //nolint:lll
-		newTestConfig(t, nil, PlaceholdersQuestionMark()).String(),
+		"Config: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, db=Database mysql: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, logger=test logger, repo=SQL db with Question Mark args with ?, stmts=Default SQL statements, migs=&{testdata db}, tick=5s, timeout=5m0s", //nolint:lll
+		newTestConfig(t, nil, "mysql", PlaceholdersQuestionMark()).String(),
 	)
 }

@@ -15,7 +15,9 @@ func newTestMigrations(t *testing.T) FsMigrations {
 	root, err := fs.Sub(os.DirFS("testdata"), "db")
 	require.NoError(t, err)
 
-	return FsMigrations{fs: root}
+	return FsMigrations{
+		fs: root,
+	}
 }
 
 func TestNewMigrations(t *testing.T) {
@@ -26,10 +28,13 @@ func TestNewMigrations(t *testing.T) {
 
 func Test_fsMigrations_List(t *testing.T) {
 	migs := newTestMigrations(t)
-	names, err := migs.List()
+	mds, err := migs.List("postgresql")
 
 	require.NoError(t, err)
-	assert.Equal(t, []string{"2023-01-01/01_create_country_table.sql", "2023-01-01/02_populate_country_table.sql"}, names)
+	assert.Len(t, mds, 3)
+	assert.Equal(t, "2023-01-01/01_create_country_table.postgresql.sql", mds[0])
+	assert.Equal(t, "2023-01-01/02_create_country_index.sql", mds[1])
+	assert.Equal(t, "2023-01-01/03_populate_country_table.sql", mds[2])
 }
 
 func Test_fsMigrations_Content(t *testing.T) {
@@ -52,9 +57,24 @@ func Test_fsMigrations_Content(t *testing.T) {
 		},
 		{
 			name:    "ok",
-			args:    args{name: "2023-01-01/01_create_country_table.sql"},
+			args:    args{name: "2023-01-01/01_create_country_table.mysql.sql"},
 			wantErr: assert.NoError,
-			want:    "create table country\n(\n    name                     varchar(64) not null,\n    alpha2                   char(2)     not null,\n    alpha3                   char(3)     not null,\n    country_code             char(3)     not null,\n    iso_3166_2               char(13)    not null,\n    region                   varchar(8),\n    sub_region               varchar(32),\n    intermediate_region      varchar(16),\n    region_code              varchar(3),\n    sub_region_code          varchar(3),\n    intermediate_region_code varchar(3),\n    constraint country_pk primary key (name)\n);\n", //nolint:lll
+			want: `create table country
+(
+    name                     nvarchar(64) not null,
+    alpha2                   char(2)  not null,
+    alpha3                   char(3)  not null,
+    country_code             char(3)  not null,
+    iso_3166_2               char(13) not null,
+    region                   varchar(8),
+    sub_region               varchar(32),
+    intermediate_region      varchar(16),
+    region_code              varchar(3),
+    sub_region_code          varchar(3),
+    intermediate_region_code varchar(3),
+    constraint country_pk primary key (name)
+);
+`,
 		},
 	}
 

@@ -1,0 +1,15 @@
+create table country
+(
+    name                     nvarchar(64) not null,
+    alpha2                   char(2)  not null,
+    alpha3                   char(3)  not null,
+    country_code             char(3)  not null,
+    iso_3166_2               char(13) not null,
+    region                   varchar(8),
+    sub_region               varchar(32),
+    intermediate_region      varchar(16),
+    region_code              varchar(3),
+    sub_region_code          varchar(3),
+    intermediate_region_code varchar(3),
+    constraint country_pk primary key (name)
+);

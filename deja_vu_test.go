@@ -77,24 +77,27 @@ func TestDejaVu_Upgrade(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db, syntax := tt.setup(t)
-			dv := newTestConfig(t, db, syntax).Build()
+			dv := newTestConfig(t, db, tt.name, syntax).Build()
 			ctx := context.Background()
 
 			err := dv.Upgrade(ctx)
 			require.NoError(t, err)
 
-			assert.True(t, dv.db.Exist(ctx, "deja_vu_history"))
-			assert.True(t, dv.db.Exist(ctx, "deja_vu_lock"))
+			database, ok := dv.db.(DefaultDatabase)
+			require.True(t, ok)
 
-			count, err := dv.db.Count(ctx, "deja_vu_history")
+			assert.True(t, database.Exist(ctx, "deja_vu_history"))
+			assert.True(t, database.Exist(ctx, "deja_vu_lock"))
+
+			count, err := database.Count(ctx, "deja_vu_history")
 			require.NoError(t, err)
-			assert.Equal(t, 2, count)
+			assert.Equal(t, 3, count)
 
-			count, err = dv.db.Count(ctx, "deja_vu_lock")
+			count, err = database.Count(ctx, "deja_vu_lock")
 			require.NoError(t, err)
 			assert.Equal(t, 0, count)
 
-			count, err = dv.db.Count(ctx, "country")
+			count, err = database.Count(ctx, "country")
 			require.NoError(t, err)
 			assert.Equal(t, 249, count)
 		})

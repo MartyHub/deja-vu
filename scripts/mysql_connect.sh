@@ -9,6 +9,7 @@ podman exec \
   --tty \
   mysql \
   mysql \
+  --default-character-set=utf8mb4 \
   --host=localhost \
   --user=root \
   --password=root \

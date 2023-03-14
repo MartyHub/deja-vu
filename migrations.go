@@ -9,7 +9,7 @@ import (
 type Migrations interface {
 	fmt.Stringer
 
-	List() ([]string, error)
+	List(database string) ([]string, error)
 	Content(name string) (string, error)
 }
 
@@ -17,14 +17,18 @@ type FsMigrations struct {
 	fs fs.FS
 }
 
-func (m FsMigrations) List() ([]string, error) {
+func (m FsMigrations) List(database string) ([]string, error) {
 	result := make([]string, 0)
-	err := fs.WalkDir(m.fs, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(m.fs, ".", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !d.IsDir() {
+		if FilterMigration(entry.Name(), database) {
+			if entry.IsDir() {
+				return fs.SkipDir
+			}
+		} else if !entry.IsDir() {
 			result = append(result, path)
 		}
 
@@ -57,4 +61,11 @@ func (m FsMigrations) Content(name string) (string, error) {
 
 func (m FsMigrations) String() string {
 	return fmt.Sprintf("%v", m.fs)
+}
+
+func FilterMigration(migName, targetDatabase string) bool {
+	parts := strings.Split(migName, ".")
+	l := len(parts)
+
+	return l > 2 && parts[l-2] != targetDatabase
 }

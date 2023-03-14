@@ -8,13 +8,9 @@ import (
 type Database interface {
 	fmt.Stringer
 
-	Ping(ctx context.Context) error
+	Name() string
 
-	Count(ctx context.Context, table string) (int, error)
-	Exist(ctx context.Context, table string) bool
-
-	InitLockTable(ctx context.Context) error
-	InitHistoryTable(ctx context.Context) error
+	Init(ctx context.Context) error
 
 	Lock(ctx context.Context, lck Lock) bool
 
@@ -24,10 +20,11 @@ type Database interface {
 	Unlock(ctx context.Context, lck Lock) error
 }
 
-func NewDatabase(clock Clock, logger Logger, repo Repository, stmts Statements) DefaultDatabase {
+func NewDatabase(clock Clock, logger Logger, name string, repo Repository, stmts Statements) DefaultDatabase {
 	return DefaultDatabase{
 		clock:  clock,
 		logger: logger,
+		name:   name,
 		repo:   repo,
 		stmts:  stmts,
 	}
@@ -36,8 +33,13 @@ func NewDatabase(clock Clock, logger Logger, repo Repository, stmts Statements) 
 type DefaultDatabase struct {
 	clock  Clock
 	logger Logger
+	name   string
 	repo   Repository
 	stmts  Statements
+}
+
+func (d DefaultDatabase) Name() string {
+	return d.name
 }
 
 func (d DefaultDatabase) Ping(ctx context.Context) error {
@@ -63,6 +65,26 @@ func (d DefaultDatabase) Exist(ctx context.Context, table string) bool {
 	_, err := d.Count(ctx, table)
 
 	return err == nil
+}
+
+func (d DefaultDatabase) Init(ctx context.Context) error {
+	if err := d.Ping(ctx); err != nil {
+		return err
+	}
+
+	if !d.Exist(ctx, LockTableName) {
+		if err := d.InitLockTable(ctx); err != nil {
+			return err
+		}
+	}
+
+	if !d.Exist(ctx, HistoryTableName) {
+		if err := d.InitHistoryTable(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d DefaultDatabase) InitLockTable(ctx context.Context) error {
@@ -185,7 +207,8 @@ func (d DefaultDatabase) Unlock(ctx context.Context, lck Lock) error {
 }
 
 func (d DefaultDatabase) String() string {
-	return fmt.Sprintf("Database: clock=%v, logger=%v, repo=%v, stmts=%v",
+	return fmt.Sprintf("Database %s: clock=%v, logger=%v, repo=%v, stmts=%v",
+		d.name,
 		d.clock,
 		d.logger,
 		d.repo,
