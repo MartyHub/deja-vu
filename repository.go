@@ -41,7 +41,7 @@ func (repo DBRepository) EnsureTransaction(
 	opts *sql.TxOptions,
 	f func(ctx context.Context, repo Repository) error,
 ) (err error) {
-	repo.logger.Log("Starting transaction...")
+	LogTx(repo.logger, opts)
 
 	tx, err := repo.db.BeginTx(ctx, opts)
 	if err != nil {
@@ -79,7 +79,7 @@ func (repo DBRepository) Ping(ctx context.Context) error {
 
 func (repo DBRepository) Exec(ctx context.Context, stmt *Statement) error {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 	_, err := repo.db.ExecContext(ctx, query, args...)
 
 	return err
@@ -87,14 +87,14 @@ func (repo DBRepository) Exec(ctx context.Context, stmt *Statement) error {
 
 func (repo DBRepository) Query(ctx context.Context, stmt *Statement) (*sql.Rows, error) {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 
 	return repo.db.QueryContext(ctx, query, args...)
 }
 
 func (repo DBRepository) QueryRow(ctx context.Context, stmt *Statement) *sql.Row {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 
 	return repo.db.QueryRowContext(ctx, query, args...)
 }
@@ -114,14 +114,13 @@ func (repo txRepository) EnsureTransaction(
 	opts *sql.TxOptions,
 	f func(ctx context.Context, repo Repository) error,
 ) error {
-	if opts == nil || repo.opts != nil && *repo.opts == *opts {
-		repo.logger.Log("Already in a transaction")
-
-		return f(ctx, repo)
+	if NewTransactionRequired(repo.opts, opts) {
+		return repo.DBRepository.EnsureTransaction(ctx, opts, f)
 	}
 
-	// Create new transaction
-	return repo.DBRepository.EnsureTransaction(ctx, opts, f)
+	repo.logger.Log("Already in a transaction")
+
+	return f(ctx, repo)
 }
 
 func (repo txRepository) Ping(ctx context.Context) error {
@@ -130,7 +129,7 @@ func (repo txRepository) Ping(ctx context.Context) error {
 
 func (repo txRepository) Exec(ctx context.Context, stmt *Statement) error {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 	_, err := repo.tx.ExecContext(ctx, query, args...)
 
 	return err
@@ -138,14 +137,14 @@ func (repo txRepository) Exec(ctx context.Context, stmt *Statement) error {
 
 func (repo txRepository) Query(ctx context.Context, stmt *Statement) (*sql.Rows, error) {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 
 	return repo.tx.QueryContext(ctx, query, args...)
 }
 
 func (repo txRepository) QueryRow(ctx context.Context, stmt *Statement) *sql.Row {
 	query, args := stmt.WithPlaceholders(repo.placeholders)
-	logStatement(repo.logger, query, args)
+	LogStatement(repo.logger, query, args)
 
 	return repo.tx.QueryRowContext(ctx, query, args...)
 }
@@ -154,10 +153,32 @@ func (repo txRepository) String() string {
 	return fmt.Sprintf("SQL tx with %v args", repo.placeholders)
 }
 
-func logStatement(logger Logger, query string, args []any) {
+func NewTransactionRequired(current, target *sql.TxOptions) bool {
+	if current == nil {
+		return target != nil
+	} else if target == nil {
+		return true
+	}
+
+	if current.ReadOnly != target.ReadOnly {
+		return true
+	}
+
+	return target.Isolation > current.Isolation
+}
+
+func LogStatement(logger Logger, query string, args []any) {
 	logger.Log("Statement: " + query)
 
 	for i, arg := range args {
 		logger.Log(fmt.Sprintf("Arg %d: %v", i+1, arg))
+	}
+}
+
+func LogTx(logger Logger, opts *sql.TxOptions) {
+	if opts != nil && opts.ReadOnly {
+		logger.Log("Starting read only transaction...")
+	} else {
+		logger.Log("Starting transaction...")
 	}
 }
