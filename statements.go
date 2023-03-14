@@ -46,13 +46,14 @@ func (s DefaultStatements) CreateHistoryTable() *Statement {
 			%s timestamp    not null,
 			%s int          not null,
 			%s char(43)     not null,
-			primary key (name)
+			constraint %s_pk primary key (name)
 		)`,
 		HistoryTableName,
 		HistoryColumnName,
 		HistoryColumnStartedAt,
 		HistoryColumnDuration,
 		HistoryColumnChecksum,
+		HistoryTableName,
 	)
 }
 
@@ -63,13 +64,14 @@ func (s DefaultStatements) CreateLockTable() *Statement {
 			%s varchar(128) not null,
 			%s int          not null,
 			%s timestamp    not null,
-			primary key (id)
+			constraint %s_pk primary key (id)
 		)`,
 		LockTableName,
 		LockColumnID,
 		LockColumnHostname,
 		LockColumnPid,
 		LockColumnSince,
+		LockTableName,
 	)
 }
 
