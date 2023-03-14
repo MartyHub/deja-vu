@@ -2,6 +2,7 @@ package dejavu
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 )
 
@@ -51,14 +52,19 @@ func (d DefaultDatabase) Ping(ctx context.Context) error {
 }
 
 func (d DefaultDatabase) Count(ctx context.Context, table string) (int, error) {
-	row := d.repo.QueryRow(ctx, d.stmts.CountFromTable(table))
-
 	var result int
-	if err := row.Scan(&result); err != nil {
-		return 0, newError(err, "failed to count table %s", table)
-	}
 
-	return result, nil
+	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, repo Repository) error {
+		row := d.repo.QueryRow(ctx, d.stmts.CountFromTable(table))
+
+		if err := row.Scan(&result); err != nil {
+			return newError(err, "failed to count table %s", table)
+		}
+
+		return nil
+	})
+
+	return result, err
 }
 
 func (d DefaultDatabase) Exist(ctx context.Context, table string) bool {
@@ -72,16 +78,12 @@ func (d DefaultDatabase) Init(ctx context.Context) error {
 		return err
 	}
 
-	if !d.Exist(ctx, LockTableName) {
-		if err := d.InitLockTable(ctx); err != nil {
-			return err
-		}
+	if err := d.InitLockTable(ctx); err != nil {
+		return err
 	}
 
-	if !d.Exist(ctx, HistoryTableName) {
-		if err := d.InitHistoryTable(ctx); err != nil {
-			return err
-		}
+	if err := d.InitHistoryTable(ctx); err != nil {
+		return err
 	}
 
 	return nil
@@ -138,28 +140,32 @@ func (d DefaultDatabase) Lock(ctx context.Context, lck Lock) bool {
 func (d DefaultDatabase) History(ctx context.Context) ([]Migration, error) {
 	d.logger.Log("Finding existing migrations...")
 
-	rows, err := d.repo.Query(ctx, d.stmts.History())
-	if err != nil {
-		return nil, newError(err, "failed to query database history")
-	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer rows.Close()
+	var migs []Migration
 
-	migs := make([]Migration, 0)
+	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, repo Repository) error {
+		rows, err := d.repo.Query(ctx, d.stmts.History())
+		if err != nil {
+			return newError(err, "failed to query database history")
+		}
+		//goland:noinspection GoUnhandledErrorResult
+		defer rows.Close()
 
-	for rows.Next() {
-		var mig Migration
+		for rows.Next() {
+			var mig Migration
 
-		if err = rows.Scan(&mig.Name, &mig.Start, &mig.DurationMs, &mig.Checksum); err != nil {
-			return migs, newError(err, "failed to scan database history")
+			if err = rows.Scan(&mig.Name, &mig.Start, &mig.DurationMs, &mig.Checksum); err != nil {
+				return newError(err, "failed to scan database history")
+			}
+
+			migs = append(migs, mig)
 		}
 
-		migs = append(migs, mig)
-	}
+		return nil
+	})
 
 	d.logger.Log(fmt.Sprintf("Found %d existing migration(s)", len(migs)))
 
-	return migs, nil
+	return migs, err
 }
 
 func (d DefaultDatabase) Migrate(ctx context.Context, name, content string) error {
@@ -204,6 +210,10 @@ func (d DefaultDatabase) Unlock(ctx context.Context, lck Lock) error {
 	d.logger.Log("Lock successfully freed")
 
 	return nil
+}
+
+func (d DefaultDatabase) ReadOnlyTx() *sql.TxOptions {
+	return &sql.TxOptions{ReadOnly: true}
 }
 
 func (d DefaultDatabase) String() string {

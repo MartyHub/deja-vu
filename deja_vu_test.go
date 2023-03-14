@@ -3,6 +3,7 @@ package dejavu
 import (
 	"context"
 	"database/sql"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -44,7 +45,7 @@ func postgresql(t *testing.T) (*sql.DB, Placeholders) {
 func sqlite(t *testing.T) (*sql.DB, Placeholders) {
 	t.Helper()
 
-	result, err := sql.Open("sqlite", ":memory:")
+	result, err := sql.Open("sqlite", filepath.Join(t.TempDir(), "deja_vu.sqlite"))
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
