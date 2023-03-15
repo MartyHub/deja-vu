@@ -136,7 +136,16 @@ func TestConfig_WithTimeout(t *testing.T) {
 func TestConfig_String(t *testing.T) {
 	assert.Equal(
 		t,
-		"Config: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, db=Database mysql: clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, logger=test logger, repo=SQL db with Question Mark args with ?, stmts=Default SQL statements, migs=&{testdata db}, tick=5s, timeout=5m0s", //nolint:lll
+		"Config: "+
+			"clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, "+
+			"db=Database mysql: "+
+			"clock=Fixed clock at 2023-03-10 22:04:27 +0000 UTC, "+
+			"logger=test logger, "+
+			"repo=SQL db with Question Mark args with ?, "+
+			"stmts=Default SQL statements, "+
+			"migs=&{testdata db}, "+
+			"tick=5s, "+
+			"timeout=5m0s",
 		newTestConfig(t, nil, "mysql", PlaceholdersQuestionMark()).String(),
 	)
 }
