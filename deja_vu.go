@@ -87,38 +87,35 @@ func (dv DejaVu) Missing(ctx context.Context) ([]string, error) {
 	return migs[migIdx:], nil
 }
 
-//nolint:nakedret
-func (dv DejaVu) Upgrade(ctx context.Context) (err error) {
+func (dv DejaVu) Upgrade(ctx context.Context) error {
 	dv.logger.Log("Starting database upgrade...")
 
 	if err := dv.db.Init(ctx); err != nil {
 		return err
 	}
 
-	var lck Lock
-
-	lck, err = dv.lock(ctx)
+	lck, err := dv.lock(ctx)
 	if err != nil {
-		return
+		return err
 	}
 
 	defer func() {
-		if e := dv.db.Unlock(ctx, lck); e != nil {
+		if err2 := dv.db.Unlock(ctx, lck); err2 != nil {
+			dv.logger.Log(fmt.Sprintf("failed to free lock: %v", err2))
+
 			if err == nil {
-				err = e
-			} else {
-				dv.logger.Log(fmt.Sprintf("failed to free lock: %v", e))
+				err = err2
 			}
 		}
 	}()
 
 	if err = dv.doUpgrade(ctx); err != nil {
-		return
+		return err
 	}
 
 	dv.logger.Log("Database successfully upgraded")
 
-	return
+	return err
 }
 
 func (dv DejaVu) doUpgrade(ctx context.Context) error {

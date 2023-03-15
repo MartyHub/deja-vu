@@ -35,17 +35,14 @@ type DBRepository struct {
 	placeholders Placeholders
 }
 
-//nolint:nakedret
 func (repo DBRepository) EnsureTransaction(
 	ctx context.Context,
 	opts *sql.TxOptions,
 	f func(ctx context.Context, repo Repository) error,
-) (err error) {
-	LogTx(repo.logger, opts)
-
-	tx, err := repo.db.BeginTx(ctx, opts)
+) error {
+	tx, err := repo.beginTx(ctx, opts)
 	if err != nil {
-		return
+		return err
 	}
 
 	defer func() {
@@ -70,7 +67,7 @@ func (repo DBRepository) EnsureTransaction(
 		opts:         opts,
 	})
 
-	return
+	return err
 }
 
 func (repo DBRepository) Ping(ctx context.Context) error {
@@ -101,6 +98,16 @@ func (repo DBRepository) QueryRow(ctx context.Context, stmt *Statement) *sql.Row
 
 func (repo DBRepository) String() string {
 	return fmt.Sprintf("SQL db with %v", repo.placeholders)
+}
+
+func (repo DBRepository) beginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	if opts != nil && opts.ReadOnly {
+		repo.logger.Log("Starting read only transaction...")
+	} else {
+		repo.logger.Log("Starting transaction...")
+	}
+
+	return repo.db.BeginTx(ctx, opts)
 }
 
 type txRepository struct {
@@ -172,13 +179,5 @@ func LogStatement(logger Logger, query string, args []any) {
 
 	for i, arg := range args {
 		logger.Log(fmt.Sprintf("Arg %d: %v", i+1, arg))
-	}
-}
-
-func LogTx(logger Logger, opts *sql.TxOptions) {
-	if opts != nil && opts.ReadOnly {
-		logger.Log("Starting read only transaction...")
-	} else {
-		logger.Log("Starting transaction...")
 	}
 }
