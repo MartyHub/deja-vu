@@ -82,6 +82,7 @@ func (d DefaultDatabase) Init(ctx context.Context) error {
 		return err
 	}
 
+	//nolint:revive
 	if err := d.InitHistoryTable(ctx); err != nil {
 		return err
 	}
