@@ -3,7 +3,7 @@ module github.com/MartyHub/deja-vu
 go 1.20
 
 require (
-	github.com/go-sql-driver/mysql v1.7.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/stretchr/testify v1.8.2
 	modernc.org/sqlite v1.22.0
