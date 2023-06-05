@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jackc/pgx/v5 v5.3.1
-	github.com/stretchr/testify v1.8.3
-	modernc.org/sqlite v1.22.1
+	github.com/stretchr/testify v1.8.4
+	modernc.org/sqlite v1.23.0
 )
 
 require (
