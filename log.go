@@ -8,7 +8,7 @@ import (
 type Logger interface {
 	fmt.Stringer
 
-	Log(string)
+	Log(s string)
 }
 
 type FmtLogger struct{}

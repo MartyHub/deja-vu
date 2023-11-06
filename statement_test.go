@@ -13,7 +13,7 @@ func TestNewStatement(t *testing.T) {
 
 	require.NotNil(t, qb)
 	assert.Equal(t, "select * from test_table", qb.sql)
-	assert.Len(t, qb.args, 0)
+	assert.Empty(t, qb.args)
 }
 
 func TestStatement_Arg(t *testing.T) {
