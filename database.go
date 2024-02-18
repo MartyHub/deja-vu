@@ -54,7 +54,7 @@ func (d DefaultDatabase) Ping(ctx context.Context) error {
 func (d DefaultDatabase) Count(ctx context.Context, table string) (int, error) {
 	var result int
 
-	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, repo Repository) error {
+	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, _ Repository) error {
 		row := d.repo.QueryRow(ctx, d.stmts.CountFromTable(table))
 
 		if err := row.Scan(&result); err != nil {
@@ -142,7 +142,7 @@ func (d DefaultDatabase) History(ctx context.Context) ([]Migration, error) {
 
 	var migs []Migration
 
-	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, repo Repository) error {
+	err := d.repo.EnsureTransaction(ctx, d.ReadOnlyTx(), func(ctx context.Context, _ Repository) error {
 		rows, err := d.repo.Query(ctx, d.stmts.History())
 		if err != nil {
 			return newError(err, "failed to query database history")

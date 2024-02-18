@@ -84,6 +84,7 @@ func Test_fsMigrations_Content(t *testing.T) {
 			if !tt.wantErr(t, err) {
 				return
 			}
+
 			assert.Equal(t, tt.want, got)
 		})
 	}
