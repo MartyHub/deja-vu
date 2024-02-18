@@ -54,9 +54,11 @@ func (repo DBRepository) EnsureTransaction(
 			panic(p)
 		} else if err != nil {
 			repo.logger.Log("Rollbacking transaction...")
+
 			_ = tx.Rollback()
 		} else {
 			repo.logger.Log("Committing transaction...")
+
 			err = tx.Commit()
 		}
 	}()
