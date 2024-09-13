@@ -172,7 +172,7 @@ func (d DefaultDatabase) Migrate(ctx context.Context, name, content string) erro
 	start := d.clock.Now()
 
 	if err := d.repo.EnsureTransaction(ctx, nil, func(ctx context.Context, repo Repository) error {
-		return repo.Exec(ctx, NewStatement(content))
+		return repo.Exec(ctx, NewStatement("%s", content))
 	}); err != nil {
 		return newError(err, "migration %s failed", name)
 	}

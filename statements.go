@@ -36,7 +36,7 @@ type Statements interface {
 type DefaultStatements struct{}
 
 func (s DefaultStatements) CountFromTable(name string) *Statement {
-	return NewStatement("select count(1) from " + name)
+	return NewStatement("select count(1) from %s", name)
 }
 
 func (s DefaultStatements) CreateHistoryTable() *Statement {
